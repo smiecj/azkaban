@@ -2,7 +2,7 @@ CREATE TABLE execution_jobs (
   exec_id       INT          NOT NULL,
   project_id    INT          NOT NULL,
   version       INT          NOT NULL,
-  flow_id       VARCHAR(128) NOT NULL,
+  flow_id       VARCHAR(256) NOT NULL,
   job_id        VARCHAR(512) NOT NULL,
   attempt       INT,
   start_time    BIGINT,
