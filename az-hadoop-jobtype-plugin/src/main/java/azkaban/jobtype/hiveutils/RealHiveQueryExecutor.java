@@ -61,7 +61,7 @@ class RealHiveQueryExecutor implements HiveQueryExecutor {
       throw new IllegalArgumentException("Can't process empty args?!?");
     }
 
-    if (!ShimLoader.getHadoopShims().usesJobShell()) {
+    /*if (!ShimLoader.getHadoopShims().usesJobShell()) {
       // hadoop-20 and above - we need to augment classpath using hiveconf
       // components
       // see also: code in ExecDriver.java
@@ -75,7 +75,7 @@ class RealHiveQueryExecutor implements HiveQueryExecutor {
       }
       hiveConf.setClassLoader(loader);
       Thread.currentThread().setContextClassLoader(loader);
-    }
+    }*/
 
     this.ss = ss;
     LOG.info("SessionState = " + ss);

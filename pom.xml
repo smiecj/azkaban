@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.linkedin</groupId>
+  <artifactId>azkaban</artifactId>
+  <version>3.9</version>
+
+  <packaging>pom</packaging>
+
+  <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+
+  <modules>
+    <module>az-core</module>
+    <module>az-crypto</module>
+    <module>az-exec-util</module>
+    <module>az-flow-trigger-dependency-plugin</module>
+    <module>az-flow-trigger-dependency-type</module>
+    <module>az-hadoop-jobtype-plugin</module>
+    <module>az-hdfs-viewer</module>
+    <module>az-jobsummary</module>
+    <module>az-reportal</module>
+    <module>azkaban-common</module>
+    <module>azkaban-db</module>
+    <module>azkaban-exec-server</module>
+    <module>azkaban-hadoop-security-plugin</module>
+    <module>azkaban-solo-server</module>
+    <module>azkaban-spi</module>
+    <module>azkaban-web-server</module>
+    <module>cached-http-filesystem</module>
+  </modules>
+</project>
