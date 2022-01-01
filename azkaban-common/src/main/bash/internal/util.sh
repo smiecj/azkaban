@@ -23,7 +23,11 @@ function common_shutdown {
   process_name="$1"
   install_dir="$2"
   max_attempt=3
-  pid=`cat ${install_dir}/currentpid`
+  pid=`if [ -e ${install_dir}/currentpid ]; then cat ${install_dir}/currentpid; else echo 0; fi`
+  if [ 0 == $pid ]; then
+    return 0
+  fi
+
 
   kill_process_with_retry "${pid}" "${process_name}" "${max_attempt}"
 
@@ -48,8 +52,8 @@ function kill_process_with_retry {
    local sleeptime=5
 
    if ! is_process_running $pid ; then
-     echo "ERROR: process name ${pname} with pid: ${pid} not found"
-     exit 1
+     echo "WARN: process name ${pname} with pid: ${pid} not found"
+     return 0
    fi
 
    for try in $(seq 1 $maxattempt); do
