@@ -36,9 +36,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipFile;
+import org.apache.tools.zip.ZipOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTimeZone;
@@ -201,31 +201,32 @@ public class Utils {
   }
 
   public static void unzip(final ZipFile source, final File dest) throws IOException {
-    final Enumeration<?> entries = source.entries();
+    Enumeration<?> entries = source.getEntries();
     while (entries.hasMoreElements()) {
-      final ZipEntry entry = (ZipEntry) entries.nextElement();
-      final File newFile = new File(dest, entry.getName());
-      if (!newFile.getCanonicalPath().startsWith(dest.getCanonicalPath())) {
-        throw new IOException(
-            "Extracting zip entry would have resulted in a file outside the specified destination"
-                + " directory.");
-      }
+      ZipEntry entry = (ZipEntry) entries.nextElement();
+      File newFile = new File(dest, entry.getName());
 
       if (entry.isDirectory()) {
         newFile.mkdirs();
       } else {
         newFile.getParentFile().mkdirs();
-        final InputStream src = source.getInputStream(entry);
+        InputStream in = null;
+        OutputStream out = null;
         try {
-          final OutputStream output =
-              new BufferedOutputStream(new FileOutputStream(newFile));
-          try {
-            IOUtils.copy(src, output);
-          } finally {
-            output.close();
+          in = source.getInputStream(entry);
+          out = new FileOutputStream(newFile);
+          byte[] buff = new byte[1024];
+          int len;
+          while ((len = in.read(buff)) > 0) {
+              out.write(buff, 0, len);
           }
         } finally {
-          src.close();
+          if (null != in) {
+            in.close();
+          }
+          if (null != out) {
+              out.close();
+          }
         }
       }
     }

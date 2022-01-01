@@ -201,7 +201,7 @@ public class Props {
    */
   private void loadFrom(final InputStream inputStream) throws IOException {
     final Properties properties = new Properties();
-    properties.load(inputStream);
+    properties.load(new InputStreamReader(inputStream, "UTF-8"));
     this.put(properties);
   }
 

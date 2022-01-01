@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
+import org.apache.tools.zip.ZipFile;
 import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;

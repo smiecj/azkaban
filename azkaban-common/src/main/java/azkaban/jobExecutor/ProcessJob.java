@@ -219,6 +219,8 @@ public class ProcessJob extends AbstractProcessJob {
 
     // change krb5ccname env var so that each job execution gets its own cache
     final Map<String, String> envVars = getEnvironmentVariables();
+    // JDK 1.8.0_291 version: fix encoding problem, manually put LANG = UTF-8 environment
+    envVars.put("LANG", "en_US.UTF-8");
     envVars.put(KRB5CCNAME, getKrb5ccname(this.getJobProps()));
 
     // determine whether to run as Azkaban or run as effectiveUser,
