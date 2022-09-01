@@ -200,6 +200,9 @@ public class Constants {
     // Path name of execute-as-user executable
     public static final String AZKABAN_SERVER_NATIVE_LIB_FOLDER = "azkaban.native.lib";
 
+    // admin user name, default root
+    public static final String AZKABAN_NEED_SUDO = "azkaban.need.sudo";
+
     // Name of *nix group associated with the process running Azkaban
     public static final String AZKABAN_SERVER_GROUP_NAME = "azkaban.group.name";
 

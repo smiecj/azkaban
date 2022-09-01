@@ -82,6 +82,11 @@ public class AzkabanProcess {
       throw new IllegalStateException("The process can only be used once.");
     }
 
+    // fix: not root user execute command add sudo
+    // xxxx
+
+    this.logger.info("[test] azkaban process cmd: " + cmd);
+
     final ProcessBuilder builder = new ProcessBuilder(this.cmd);
     builder.directory(new File(this.workingDir));
     builder.environment().putAll(this.env);

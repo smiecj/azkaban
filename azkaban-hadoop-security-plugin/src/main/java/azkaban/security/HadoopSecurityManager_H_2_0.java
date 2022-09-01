@@ -828,7 +828,7 @@ public class HadoopSecurityManager_H_2_0 extends HadoopSecurityManager {
         CHMOD, TOKEN_FILE_PERMISSIONS, tokenFile.getAbsolutePath()
     );
     int result = this.executeAsUser
-        .execute(System.getProperty("user.name"), changePermissionsCommand);
+        .execute(System.getProperty("user.name"), changePermissionsCommand, true);
     if (result != 0) {
       throw new IOException("Unable to modify permissions. User: " + user);
     }
@@ -836,7 +836,7 @@ public class HadoopSecurityManager_H_2_0 extends HadoopSecurityManager {
     final List<String> changeOwnershipCommand = Arrays.asList(
         CHOWN, user + ":" + group, tokenFile.getAbsolutePath()
     );
-    result = this.executeAsUser.execute("root", changeOwnershipCommand);
+    result = this.executeAsUser.execute("root", changeOwnershipCommand, true);
     if (result != 0) {
       throw new IOException("Unable to set ownership. User: " + user);
     }

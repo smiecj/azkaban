@@ -17,9 +17,15 @@ package azkaban.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 import org.apache.log4j.Logger;
+
+import static azkaban.Constants.ConfigurationKeys.AZKABAN_SERVER_NATIVE_LIB_FOLDER;
+import static azkaban.Constants.ConfigurationKeys.AZKABAN_NEED_SUDO;
 
 /**
  * This is a wrapper over the binary executable execute-as-user. It provides a simple API to run
@@ -29,6 +35,10 @@ public class ExecuteAsUser {
 
   private final static Logger log = Logger.getLogger(ExecuteAsUser.class);
   private final static String EXECUTE_AS_USER = "execute-as-user";
+
+  private final static String ROOT = "root";
+
+  private static final SecureRandom random = new SecureRandom();
 
   private final File binaryExecutable;
 
@@ -48,18 +58,13 @@ public class ExecuteAsUser {
           + this.binaryExecutable.getAbsolutePath());
     }
   }
-
-  /**
-   * API to execute a command on behalf of another user.
-   *
-   * @param user The proxy user
-   * @param command the list containing the program and its arguments
-   * @return The return value of the shell command
-   */
-  public int execute(final String user, final List<String> command) throws IOException {
-    log.info("Command: " + command);
+  
+  // executeWithProps: for sudo user
+  public int executeWithProps(final String user, final List<String> command, Props props) throws IOException {
+    List<String> genCommands = constructExecuteAsCommand(user, command, props);
+    log.info("Command: " + genCommands);
     final Process process = new ProcessBuilder()
-        .command(constructExecuteAsCommand(user, command))
+        .command(genCommands)
         .inheritIO()
         .start();
 
@@ -70,14 +75,56 @@ public class ExecuteAsUser {
       log.error(e.getMessage(), e);
       exitCode = 1;
     }
+
     return exitCode;
   }
 
-  private List<String> constructExecuteAsCommand(final String user, final List<String> command) {
+  /**
+   * API to execute a command on behalf of another user.
+   *
+   * @param user The proxy user
+   * @param command the list containing the program and its arguments
+   * @return The return value of the shell command
+   */
+  public int execute(final String user, final List<String> command) throws IOException {
+    return executeWithProps(user, command, Props.emptyProps);
+  }
+
+  private List<String> constructExecuteAsCommand(final String user, final List<String> command, final Props props) {
     final List<String> commandList = new ArrayList<>();
+    final boolean needSudo = props.getBoolean(AZKABAN_NEED_SUDO);
+    if (needSudo) {
+      commandList.add("sudo");
+    }
     commandList.add(this.binaryExecutable.getAbsolutePath());
     commandList.add(user);
     commandList.addAll(command);
     return commandList;
+  }
+
+  // for sudo user
+  public static void deleteDirectory(File directory, Props props) throws IOException {
+    final ExecuteAsUser executeAsUser = new ExecuteAsUser(
+      props.getString(AZKABAN_SERVER_NATIVE_LIB_FOLDER));
+        
+    executeAsUser.executeWithProps(ROOT, Arrays.asList("rm", "-rf", directory.getAbsolutePath()), props);
+  }
+
+  // createTempFile: for sudo user
+  public static File createTempFile(String prefix, String suffix, File directory, Props props) throws IOException {
+    final boolean needSudo = props.getBoolean(AZKABAN_NEED_SUDO);
+    if (!needSudo) {
+      return File.createTempFile(prefix, suffix, directory);
+    }
+    
+    long n = random.nextLong();
+    String nus = Long.toUnsignedString(n);
+    
+    final ExecuteAsUser executeAsUser = new ExecuteAsUser(
+      props.getString(AZKABAN_SERVER_NATIVE_LIB_FOLDER));
+      
+    String tempFileAbsolutePath = directory.getAbsolutePath() + File.separator + prefix + nus + suffix;
+    executeAsUser.executeWithProps(ROOT, Arrays.asList("touch", tempFileAbsolutePath), props);
+    return new File(tempFileAbsolutePath);
   }
 }

@@ -15,6 +15,7 @@
  */
 package azkaban.jobExecutor;
 
+import static azkaban.Constants.ConfigurationKeys.AZKABAN_NEED_SUDO;
 import static azkaban.Constants.ConfigurationKeys.AZKABAN_SERVER_GROUP_NAME;
 import static azkaban.Constants.ConfigurationKeys.AZKABAN_SERVER_NATIVE_LIB_FOLDER;
 import static azkaban.ServiceProvider.SERVICE_PROVIDER;
@@ -58,7 +59,8 @@ public class ProcessJob extends AbstractProcessJob {
   public static final String KRB5CCNAME = "KRB5CCNAME";
   private static final Duration KILL_TIME = Duration.ofSeconds(30);
   private static final String MEMCHECK_ENABLED = "memCheck.enabled";
-  private static final String CHOWN = "/bin/chown";
+  private static final String ROOT = "root";
+  private static final String CHOWN = "chown";
   private static final String CREATE_FILE = "touch";
   private static final int SUCCESSFUL_EXECUTION = 0;
   private static final String TEMP_FILE_NAME = "user_can_write";
@@ -264,12 +266,19 @@ public class ProcessJob extends AbstractProcessJob {
       }
     }
 
+    boolean needSudo = this.getJobProps().getBoolean(AZKABAN_NEED_SUDO, false);
+
     for (String command : commands) {
       AzkabanProcessBuilder builder = null;
       if (isExecuteAsUser) {
-        command =
-            String.format("%s %s %s", executeAsUserBinaryPath, effectiveUser,
-                command);
+        if (needSudo) {
+          command = String.format("sudo -E %s %s %s", executeAsUserBinaryPath, effectiveUser,
+          command);
+        } else {
+          command =
+          String.format("%s %s %s", executeAsUserBinaryPath, effectiveUser,
+              command);
+        }
         info("Command: " + command);
         builder =
             new AzkabanProcessBuilder(partitionCommandLine(command))
@@ -391,7 +400,8 @@ public class ProcessJob extends AbstractProcessJob {
         this.getSysProps().getString(AZKABAN_SERVER_NATIVE_LIB_FOLDER));
     final List<String> checkIfUserCanWriteCommand = Arrays
         .asList(CREATE_FILE, getWorkingDirectory() + "/" + TEMP_FILE_NAME);
-    final int result = executeAsUser.execute(effectiveUser, checkIfUserCanWriteCommand);
+
+    final int result = executeAsUser.executeWithProps(effectiveUser, checkIfUserCanWriteCommand, this.getJobProps());
     return result == SUCCESSFUL_EXECUTION;
   }
 
@@ -409,10 +419,10 @@ public class ProcessJob extends AbstractProcessJob {
     final ExecuteAsUser executeAsUser = new ExecuteAsUser(
         this.getSysProps().getString(AZKABAN_SERVER_NATIVE_LIB_FOLDER));
     final String groupName = this.getSysProps().getString(AZKABAN_SERVER_GROUP_NAME, "azkaban");
-    final List<String> changeOwnershipCommand = Arrays
-        .asList(CHOWN, effectiveUser + ":" + groupName, fileName);
+    final List<String> changeOwnershipCommand;
+    changeOwnershipCommand = Arrays.asList(CHOWN, effectiveUser + ":" + groupName, fileName);
     info("Change ownership of " + fileName + " to " + effectiveUser + ":" + groupName + ".");
-    final int result = executeAsUser.execute("root", changeOwnershipCommand);
+    final int result = executeAsUser.executeWithProps(ROOT, changeOwnershipCommand, this.getJobProps());
     if (result != 0) {
       handleError("Failed to change current working directory ownership. Error code: " + Integer
           .toString(result), null);

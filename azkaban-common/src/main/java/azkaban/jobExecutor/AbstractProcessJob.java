@@ -15,6 +15,7 @@
  */
 package azkaban.jobExecutor;
 
+import azkaban.utils.ExecuteAsUser;
 import azkaban.utils.JSONUtils;
 import azkaban.utils.Props;
 import azkaban.utils.PropsUtils;
@@ -268,10 +269,13 @@ public abstract class AbstractProcessJob extends AbstractJob {
     try {
       final File directory = new File(workingDir);
       // The temp file prefix must be at least 3 characters.
-      final File tempFile = File.createTempFile(getId() + propsName, "_tmp", directory);
+      final File tempFile = ExecuteAsUser.createTempFile(getId() + propsName, "_tmp", directory, props);
+      this.getLog().info("[test] create temp file: " + tempFile.getAbsolutePath());
       props.storeFlattened(tempFile);
+      this.getLog().info("[test] store config finish");
       return tempFile;
     } catch (final IOException e) {
+      this.getLog().warn("[test] createFlattenedPropsFile e: " + e.getMessage());
       throw new RuntimeException("Failed to create temp property file. workingDir = " + workingDir);
     }
   }

@@ -46,6 +46,7 @@ import azkaban.spi.EventType;
 import azkaban.spi.Storage;
 import azkaban.storage.ProjectStorageManager;
 import azkaban.utils.DependencyTransferManager;
+import azkaban.utils.ExecuteAsUser;
 import azkaban.utils.FileIOUtils;
 import azkaban.utils.FileIOUtils.JobMetaData;
 import azkaban.utils.FileIOUtils.LogData;
@@ -83,7 +84,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -629,12 +629,13 @@ public class FlowRunnerManager implements EventListener,
    */
   private void deleteExecutionDir(final int executionId) {
     LOGGER.info("Deleting execution directory for " + executionId);
+    getGlobalProps();
     synchronized (this.executionDirDeletionSync) {
       LOGGER.info("Starting execution directory deletion for " + executionId);
       final Path flowExecutionDir = Paths.get(this.executionDirectory.toPath().toString(),
           String.valueOf(executionId));
       try {
-        FileUtils.deleteDirectory(flowExecutionDir.toFile());
+        ExecuteAsUser.deleteDirectory(flowExecutionDir.toFile(), getGlobalProps());
       } catch (final IOException e) {
         LOGGER.warn("Error when deleting directory " + flowExecutionDir.toAbsolutePath() + ".", e);
       }
@@ -925,7 +926,7 @@ public class FlowRunnerManager implements EventListener,
   public void deleteExecutionDirectory() {
     LOGGER.warn("Deleting execution dir: " + this.executionDirectory.getAbsolutePath());
     try {
-      FileUtils.deleteDirectory(this.executionDirectory);
+      ExecuteAsUser.deleteDirectory(this.executionDirectory, getGlobalProps());
     } catch (final IOException e) {
       LOGGER.error(e.getMessage());
     }

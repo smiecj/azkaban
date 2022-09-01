@@ -49,6 +49,8 @@ public class Props {
   private Props _parent;
   private String source = null;
 
+  public static final Props emptyProps = new Props();
+
   /**
    * Constructor for empty props with empty parent.
    */
