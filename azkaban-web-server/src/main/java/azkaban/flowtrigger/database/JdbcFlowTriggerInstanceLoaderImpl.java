@@ -29,6 +29,14 @@ import azkaban.project.FlowTrigger;
 import azkaban.project.Project;
 import azkaban.project.ProjectLoader;
 import azkaban.project.ProjectManager;
+import azkaban.scheduler.Schedule;
+import azkaban.scheduler.ScheduleManager;
+import azkaban.scheduler.ScheduleManagerException;
+import azkaban.trigger.TriggerBackup;
+import azkaban.trigger.TriggerBackupLoader;
+import azkaban.trigger.TriggerLoaderException;
+import azkaban.utils.TimeUtils;
+
 import com.google.common.io.Files;
 import java.io.File;
 import java.sql.ResultSet;
@@ -146,14 +154,18 @@ public class JdbcFlowTriggerInstanceLoaderImpl implements FlowTriggerInstanceLoa
   private final ProjectLoader projectLoader;
   private final DatabaseOperator dbOperator;
   private final ProjectManager projectManager;
-
+  private final ScheduleManager scheduleManager;
+  private final TriggerBackupLoader triggerBackupLoader;
 
   @Inject
   public JdbcFlowTriggerInstanceLoaderImpl(final DatabaseOperator databaseOperator,
-      final ProjectLoader projectLoader, final ProjectManager projectManager) {
+      final ProjectLoader projectLoader, final ProjectManager projectManager,
+      final ScheduleManager scheduleManager, final TriggerBackupLoader triggerBackupLoader) {
     this.dbOperator = databaseOperator;
     this.projectLoader = projectLoader;
     this.projectManager = projectManager;
+    this.scheduleManager = scheduleManager;
+    this.triggerBackupLoader = triggerBackupLoader;
   }
 
   @Override
@@ -413,6 +425,87 @@ public class JdbcFlowTriggerInstanceLoaderImpl implements FlowTriggerInstanceLoa
       handleSQLException(ex);
       return 0;
     }
+  }
+
+  // cleanUnBindSchedule: clean not bind flow trigger (e.g. flow removed but trigger not removed)
+  @Override
+  public int cleanUnBindSchedule() {
+    List<Schedule> schedules;
+    int total = 0;
+    try {
+      schedules = this.scheduleManager.getSchedules();
+    } catch (ScheduleManagerException e) {
+      logger.warn("[cleanUnBindSchedule] get schedules exception: " + e.getMessage());
+      return 0;
+    }
+    for (final Schedule schedule : schedules) {
+      if (this.isNotBindSchedule(schedule)) {
+        logger.info("[cleanUnBindSchedule] removing not bind schedule: " + schedule);
+        this.scheduleManager.removeSchedule(schedule);
+        total++;
+      }
+    }
+    logger.info("[cleanUnBindSchedule] clean unbind schedule count: " + total);
+    return total;
+  }
+
+  // backupSchedule
+  @Override
+  public int backupSchedule() {
+    List<Schedule> schedules;
+    try {
+      schedules = this.scheduleManager.getSchedules();
+    } catch (ScheduleManagerException e) {
+      logger.warn("[backupSchedule] get schedules exception: " + e.getMessage());
+      return 0;
+    }
+
+    String backupDate = TimeUtils.getCurrentDate();
+    logger.info("[backupSchedule] backup date: " + backupDate);
+
+    List<TriggerBackup> triggerList = schedules.stream()
+    .map(schedule -> {
+      TriggerBackup currentBackup = new TriggerBackup(schedule.getProjectId(), schedule.getProjectName(), 
+        schedule.getFlowName(), backupDate, schedule.getCronExpression());
+      return currentBackup;
+    })
+    .collect(Collectors.toList());
+    logger.info("[backupSchedule] to backup trigger size: " + triggerList.size());
+    try {
+      return this.triggerBackupLoader.addTriggerBackupList(triggerList);
+    } catch (TriggerLoaderException e) {
+      logger.warn("[backupSchedule] exception", e);
+    }
+    return 0;
+  }
+
+  // isNotBindSchedule: not bind project and flow schedule
+  private boolean isNotBindSchedule(Schedule schedule) {
+    int currentProjectId = schedule.getProjectId();
+    String currentFlowName = schedule.getFlowName();
+    Project currentProject = projectManager.getProject(currentProjectId);
+    if (null == currentProject) {
+      return true;
+    }
+    if (null == currentProject.getFlow(currentFlowName)) {
+      return true;
+    }
+    return false;
+  }
+
+  // removeExpireBackupSchedule
+  @Override
+  public int removeExpireBackupSchedule() {
+    int ret = 0;
+    String oneYearAgoDate = TimeUtils.getDateBeforeDays(365);
+    logger.info("[removeExpireBackupSchedule] to remove schedule backup date: " + oneYearAgoDate);
+    try {
+      ret = this.triggerBackupLoader.removeBeforeDate(oneYearAgoDate);
+    } catch (TriggerLoaderException e) {
+      logger.warn("[removeExpireBackupSchedule] exception", e);
+    }
+    logger.info("[removeExpireBackupSchedule] remove schedule backup count: " + ret);
+    return ret;
   }
 
   /**

@@ -27,7 +27,9 @@ import azkaban.project.ProjectLoader;
 import azkaban.spi.Storage;
 import azkaban.spi.StorageException;
 import azkaban.storage.StorageImplementationType;
+import azkaban.trigger.JdbcTriggerBackupImpl;
 import azkaban.trigger.JdbcTriggerImpl;
+import azkaban.trigger.TriggerBackupLoader;
 import azkaban.trigger.TriggerLoader;
 import azkaban.utils.OsCpuUtil;
 import azkaban.utils.Props;
@@ -63,6 +65,7 @@ public class AzkabanCommonModule extends AbstractModule {
     bind(TriggerLoader.class).to(JdbcTriggerImpl.class);
     bind(ProjectLoader.class).to(JdbcProjectImpl.class);
     bind(ExecutorLoader.class).to(JdbcExecutorLoader.class);
+    bind(TriggerBackupLoader.class).to(JdbcTriggerBackupImpl.class);
     bind(OsCpuUtil.class).toProvider(() -> {
       final int cpuLoadPeriodSec = this.props
           .getInt(ConfigurationKeys.AZKABAN_POLLING_CRITERIA_CPU_LOAD_PERIOD_SEC,

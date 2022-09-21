@@ -15,12 +15,16 @@
  */
 package azkaban.utils;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
+
 import org.joda.time.Days;
 import org.joda.time.DurationFieldType;
 import org.joda.time.Hours;
@@ -39,6 +43,7 @@ public class TimeUtils {
 
   private static final String DATE_TIME_ZONE_PATTERN = "yyyy/MM/dd HH:mm:ss z";
   private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+  private static final String DATE_PATTERN = "yyyy-MM-dd";
   private static int ONE_DAY = 86400;
 
   /**
@@ -73,6 +78,24 @@ public class TimeUtils {
     final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
     final LocalDateTime parsedDate = LocalDateTime.parse(dateTime, formatter);
     return parsedDate.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
+  }
+
+  /**
+   * Get current date string as "yyyy-MM-dd"
+   */
+  public static String getCurrentDate() {
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
+    return dateFormatter.format(LocalDateTime.now());
+  }
+
+  /**
+   * Get current date string as "yyyy-MM-dd"
+   */
+  public static String getDateBeforeDays(int day) {
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
+    LocalDateTime now = LocalDateTime.now();
+    Duration duration = Duration.ofDays(day);
+    return dateFormatter.format(now.minus(duration));
   }
 
   /**
@@ -258,4 +281,18 @@ public class TimeUtils {
   public static int daysEscapedOver(long referenceTime) {
     return Math.round(((System.currentTimeMillis() - referenceTime) / 1000f) / (ONE_DAY * 1.0f) - 0.5f);
   }
+
+  // getDurationSecondToSunday: get weekend duration (for init schedule task)
+  public static long getDurationToSundayWithHour(int hour) {
+    ZonedDateTime now = ZonedDateTime.now();
+    ZonedDateTime nextRun = now.withHour(hour).withMinute(0).withSecond(0);
+    if(now.compareTo(nextRun) > 0) {
+      nextRun = nextRun.plusDays(1);
+    }
+    int toSundayDay = DayOfWeek.SUNDAY.getValue() - now.getDayOfWeek().getValue();
+
+    Duration duration = Duration.between(now, nextRun);
+    return duration.getSeconds() + TimeUnit.DAYS.toSeconds(toSundayDay);
+  }
+  
 }

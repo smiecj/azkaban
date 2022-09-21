@@ -17,6 +17,8 @@
 package azkaban.flowtrigger;
 
 import azkaban.flowtrigger.database.FlowTriggerInstanceLoader;
+import azkaban.utils.TimeUtils;
+
 import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,6 +51,47 @@ public class FlowTriggerExecutionCleaner {
           .deleteTriggerExecutionsFinishingOlderThan(System
               .currentTimeMillis() - RETENTION_PERIOD.toMillis());
     }, 0, CLEAN_INTERVAL.getSeconds(), TimeUnit.SECONDS);
+
+    this.startCleanUnbindScheduleService();
+    this.startBackupScheduleService();
+    this.startRemoveExpireScheduleBackupService();
+  }
+
+  /*
+   * startCleanService: clean not bind flow schedule
+   * schedule at sunday 7:00
+   */
+  private void startCleanUnbindScheduleService() {
+
+    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    scheduler.scheduleAtFixedRate(() -> this.flowTriggerInstanceLoader.cleanUnBindSchedule(),
+        TimeUtils.getDurationToSundayWithHour(7),
+        TimeUnit.DAYS.toSeconds(1),
+        TimeUnit.SECONDS);
+  }
+
+  /* 
+   * startBackupScheduleService: backup schedule
+   * schedule at sunday 5:00
+   */
+  private void startBackupScheduleService() {
+    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    scheduler.scheduleAtFixedRate(() -> this.flowTriggerInstanceLoader.backupSchedule(),
+        TimeUtils.getDurationToSundayWithHour(5),
+        TimeUnit.DAYS.toSeconds(1) * 7,
+        TimeUnit.SECONDS);
+  }
+
+  /* 
+   * startBackupScheduleService: backup schedule
+   * schedule at sunday 10:00
+   */
+  private void startRemoveExpireScheduleBackupService() {
+    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    scheduler.scheduleAtFixedRate(() -> this.flowTriggerInstanceLoader.removeExpireBackupSchedule(),
+        TimeUtils.getDurationToSundayWithHour(10),
+        TimeUnit.DAYS.toSeconds(1) * 7,
+        TimeUnit.SECONDS);
   }
 
   public void shutdown() {

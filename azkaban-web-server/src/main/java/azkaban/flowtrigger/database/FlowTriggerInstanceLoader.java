@@ -70,4 +70,14 @@ public interface FlowTriggerInstanceLoader {
    * @return number of deleted rows(dependency instances) ;
    */
   int deleteTriggerExecutionsFinishingOlderThan(long timestamp);
+
+  /**
+   * Clean and backup schedule
+   *
+   */
+  int cleanUnBindSchedule();
+
+  int backupSchedule();
+  
+  int removeExpireBackupSchedule();
 }

@@ -31,7 +31,6 @@ import azkaban.flowtrigger.quartz.FlowTriggerScheduler;
 import azkaban.project.Project;
 import azkaban.project.ProjectFileHandler;
 import azkaban.project.ProjectLogEvent;
-import azkaban.project.ProjectLogEvent.EventType;
 import azkaban.project.ProjectManager;
 import azkaban.project.ProjectManagerException;
 import azkaban.project.ProjectWhitelist;
@@ -1832,13 +1831,14 @@ public class ProjectManagerServlet extends LoginAbstractAzkabanServlet {
       lockFlowsForProject(project, lockedFlows);
 
       // remove schedule of renamed/deleted flows
-      removeScheduleOfDeletedFlows(project, this.scheduleManager, (schedule) -> {
+      // 2022/09/14 smiecj: will not remove schedule when project upload. Will remove at cleanUnBindSchedule
+/*       removeScheduleOfDeletedFlows(project, this.scheduleManager, (schedule) -> {
         logger.info(
             "Removed schedule with id {} of renamed/deleted flow: {} from project: {}.",
             schedule.getScheduleId(), schedule.getFlowName(), schedule.getProjectName());
         this.projectManager.postProjectEvent(project, EventType.SCHEDULE, "azkaban",
             "Schedule " + schedule.toString() + " has been removed.");
-      });
+      }); */
 
       registerErrorsAndWarningsFromValidationReport(resp, ret, reports);
     } catch (final Exception e) {

@@ -32,8 +32,10 @@ import azkaban.project.JdbcProjectImplTest;
 import azkaban.project.Project;
 import azkaban.project.ProjectLoader;
 import azkaban.project.ProjectManager;
+import azkaban.scheduler.ScheduleManager;
 import azkaban.test.Utils;
 import azkaban.test.executions.ExecutionsTestUtil;
+import azkaban.trigger.TriggerBackupLoader;
 import azkaban.utils.Props;
 import java.io.File;
 import java.sql.SQLException;
@@ -71,6 +73,8 @@ public class FlowTriggerInstanceLoaderTest {
   private static FlowTriggerInstanceLoader triggerInstLoader;
   private static Project project;
   private static ProjectManager projManager;
+  private static ScheduleManager scheduleManager;
+  private static TriggerBackupLoader triggerBackupLoader;
 
   @AfterClass
   public static void destroyDB() {
@@ -88,7 +92,9 @@ public class FlowTriggerInstanceLoaderTest {
     dbOperator = Utils.initTestDB();
     projLoader = new JdbcProjectImpl(props, dbOperator);
     projManager = mock(ProjectManager.class);
-    triggerInstLoader = new JdbcFlowTriggerInstanceLoaderImpl(dbOperator, projLoader, projManager);
+    scheduleManager = mock(ScheduleManager.class);
+    triggerBackupLoader = mock(TriggerBackupLoader.class);
+    triggerInstLoader = new JdbcFlowTriggerInstanceLoaderImpl(dbOperator, projLoader, projManager, scheduleManager, triggerBackupLoader);
     project = new Project(project_id, project_name);
 
     final DirectoryYamlFlowLoader yamlFlowLoader = new DirectoryYamlFlowLoader(new Props());
