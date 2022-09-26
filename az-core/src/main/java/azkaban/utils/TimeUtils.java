@@ -35,6 +35,7 @@ import org.joda.time.Seconds;
 import org.joda.time.Weeks;
 import org.joda.time.Years;
 
+import azkaban.server.AzkabanServer;
 
 /**
  * Utilities for Time Operations
@@ -45,6 +46,7 @@ public class TimeUtils {
   private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
   private static final String DATE_PATTERN = "yyyy-MM-dd";
   private static int ONE_DAY = 86400;
+  final Props props = AzkabanServer.loadProps(args);
 
   /**
    * Formats the given millisecond instant into a string using the pattern "yyyy/MM/dd HH:mm:ss z"
@@ -286,10 +288,11 @@ public class TimeUtils {
   public static long getDurationToSundayWithHour(int hour) {
     ZonedDateTime now = ZonedDateTime.now();
     ZonedDateTime nextRun = now.withHour(hour).withMinute(0).withSecond(0);
+    int toSundayDay = DayOfWeek.SUNDAY.getValue() - now.getDayOfWeek().getValue();
     if(now.compareTo(nextRun) > 0) {
       nextRun = nextRun.plusDays(1);
+      toSundayDay--;
     }
-    int toSundayDay = DayOfWeek.SUNDAY.getValue() - now.getDayOfWeek().getValue();
 
     Duration duration = Duration.between(now, nextRun);
     return duration.getSeconds() + TimeUnit.DAYS.toSeconds(toSundayDay);
