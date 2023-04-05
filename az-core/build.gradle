@@ -38,6 +38,7 @@ dependencies {
     compile deps.commonsLang
     compile deps.jodaTime
     compile deps.io
+    // compile deps.javaxValidation
     compile deps.jacksonCoreAsl
     compile deps.jacksonMapperAsl
     compile deps.metricsCore

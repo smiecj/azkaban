@@ -49,3 +49,8 @@ LOCAL_STORAGE/
 
 # maven
 target
+
+# test
+.vscode
+test.sh
+test.log
