@@ -37,6 +37,8 @@ import azkaban.user.User;
 import azkaban.user.UserManager;
 import azkaban.utils.TimeUtils;
 import azkaban.webapp.AzkabanWebServer;
+import azkaban.webapp.servlet.HistoryServlet.PageSelection;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -93,7 +95,7 @@ public class ScheduleServlet extends LoginAbstractAzkabanServlet {
     if (hasParam(req, "ajax")) {
       handleAJAXAction(req, resp, session);
     } else {
-      handleGetAllSchedules(req, resp, session);
+      handleGetSchedules(req, resp, session);
     }
   }
 
@@ -146,6 +148,65 @@ public class ScheduleServlet extends LoginAbstractAzkabanServlet {
         throw new ServletException(e);
       }
     }
+  }
+
+  private void handleSchedulePage(final HttpServletRequest req, final Page page) throws ServletException {
+      int pageNum = getIntParam(req, "page", 1);
+      final int pageSize = Math.min(getIntParam(req, "size", getDisplayExecutionPageSize()), getDisplayExecutionPageMaxSize());
+      final int pageStart = (pageNum-1) * pageSize;
+
+      final String projectName = getParam(req, "projectName", "");
+      final String flowName = getParam(req, "flowName", "");
+
+      final String projectExactName = getParam(req, "projectExactName", "");
+      final String flowExactName = getParam(req, "flowExactName", "");
+
+      // get data
+      final List<Schedule> schedules;
+      try {
+        if (!projectName.isEmpty() || !flowName.isEmpty() || !projectExactName.isEmpty() || !flowExactName.isEmpty()) {  
+          schedules = this.scheduleManager.getSchedule(projectExactName, flowExactName, projectName, flowName, pageStart, pageSize);
+          page.add("search_project", projectName);
+          page.add("search_flow", flowName);
+          page.add("search_project_exact", projectExactName);
+          page.add("search_flow_exact", flowExactName);
+          page.add("advfilter", "true");
+        } else {
+          schedules = this.scheduleManager.getSchedules(pageStart, pageSize);
+        }
+      } catch (final ScheduleManagerException e) {
+        throw new ServletException(e);
+      }
+
+      page.add("schedules", schedules);
+      page.add("search_page_size", pageSize);
+
+      if (pageNum == 1) {
+        page.add("previous", new PageSelection(1, pageSize, true, false));
+      } else {
+        page.add("previous", new PageSelection(pageNum - 1, pageSize, false,
+            false));
+      }
+      page.add("next", new PageSelection(pageNum + 1, pageSize, false, false));
+
+      int pageStartValue = 1;
+      if (pageNum > 3) {
+        pageStartValue = pageNum - 2;
+      }
+      page.add("page1", new PageSelection(pageStartValue, pageSize, false,
+        pageStartValue == pageNum));
+      pageStartValue++;
+      page.add("page2", new PageSelection(pageStartValue, pageSize, false,
+          pageStartValue == pageNum));
+      pageStartValue++;
+      page.add("page3", new PageSelection(pageStartValue, pageSize, false,
+          pageStartValue == pageNum));
+      pageStartValue++;
+      page.add("page4", new PageSelection(pageStartValue, pageSize, false,
+          pageStartValue == pageNum));
+      pageStartValue++;
+      page.add("page5", new PageSelection(pageStartValue, pageSize, false,
+          pageStartValue == pageNum));
   }
 
   private void writeScheduleData(final List<HashMap<String, Object>> output,
@@ -382,7 +443,7 @@ public class ScheduleServlet extends LoginAbstractAzkabanServlet {
     return filterProjectByPermission(this.projectManager.getProject(projectId), user, type, ret);
   }
 
-  private void handleGetAllSchedules(final HttpServletRequest req,
+  private void handleGetSchedules(final HttpServletRequest req,
       final HttpServletResponse resp, final Session session) throws ServletException,
       IOException {
 
@@ -390,13 +451,7 @@ public class ScheduleServlet extends LoginAbstractAzkabanServlet {
         newPage(req, resp, session,
             "azkaban/webapp/servlet/velocity/scheduledflowpage.vm");
 
-    final List<Schedule> schedules;
-    try {
-      schedules = this.scheduleManager.getSchedules();
-    } catch (final ScheduleManagerException e) {
-      throw new ServletException(e);
-    }
-    page.add("schedules", schedules);
+    handleSchedulePage(req, page);
     page.render();
   }
 

@@ -29,6 +29,7 @@ import azkaban.reportal.util.IStreamProvider;
 import azkaban.reportal.util.Reportal;
 import azkaban.reportal.util.Reportal.Query;
 import azkaban.reportal.util.Reportal.Variable;
+import azkaban.restli.ResourceUtils;
 import azkaban.reportal.util.ReportalHelper;
 import azkaban.reportal.util.ReportalUtil;
 import azkaban.reportal.util.StreamProviderHDFS;
@@ -225,7 +226,7 @@ public class ReportalServlet extends LoginAbstractAzkabanServlet {
 
     // Delete report
     if (ajaxName.equals("delete")) {
-      if (!project.hasPermission(user, Type.ADMIN)) {
+      if (!ResourceUtils.hasPermission(project, user, Type.ADMIN)) {
         ret.put("error", "You do not have permissions to delete this reportal.");
       } else {
         try {

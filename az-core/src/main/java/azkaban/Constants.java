@@ -310,6 +310,9 @@ public class Constants {
     // number of rows to be displayed on the executions page.
     public static final String DISPLAY_EXECUTION_PAGE_SIZE = "azkaban.display.execution_page_size";
 
+    // number of rows to be displayed on the executions page.
+    public static final String DISPLAY_EXECUTION_PAGE_MAX_SIZE = "azkaban.display.execution_page_max_size";
+
     // locked flow error message. Parameters passed in are the flow name and project name.
     public static final String AZKABAN_LOCKED_FLOW_ERROR_MESSAGE =
         "azkaban.locked.flow.error.message";

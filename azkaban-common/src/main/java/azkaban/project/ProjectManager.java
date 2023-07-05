@@ -166,7 +166,7 @@ public class ProjectManager {
   public List<Project> getGroupProjects(final User user) {
     final List<Project> array = new ArrayList<>();
     for (final Project project : this.projectsById.values()) {
-      if (project.hasGroupPermission(user, Type.READ)) {
+      if (project.hasGroupPermission(user, Type.READ) == Project.PERM_HAS) {
         array.add(project);
       }
     }

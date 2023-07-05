@@ -68,6 +68,7 @@ public abstract class AbstractAzkabanServlet extends HttpServlet {
   private List<TriggerPlugin> triggerPlugins;
 
   private int displayExecutionPageSize;
+  private int displayExecutionPageMaxSize;
 
   public static String createJsonResponse(final String status, final String message,
       final String action, final Map<String, Object> params) {
@@ -108,6 +109,7 @@ public abstract class AbstractAzkabanServlet extends HttpServlet {
     this.color = props.getString("azkaban.color", "#FF0000");
     this.passwordPlaceholder = props.getString("azkaban.password.placeholder", "Password");
     this.displayExecutionPageSize = props.getInt(ConfigurationKeys.DISPLAY_EXECUTION_PAGE_SIZE, 16);
+    this.displayExecutionPageMaxSize = props.getInt(ConfigurationKeys.DISPLAY_EXECUTION_PAGE_MAX_SIZE, 200);
 
     if (this.application instanceof AzkabanWebServer) {
       final AzkabanWebServer server = (AzkabanWebServer) this.application;
@@ -377,5 +379,9 @@ public abstract class AbstractAzkabanServlet extends HttpServlet {
 
   protected int getDisplayExecutionPageSize() {
     return this.displayExecutionPageSize;
+  }
+
+  protected int getDisplayExecutionPageMaxSize() {
+    return this.displayExecutionPageMaxSize;
   }
 }

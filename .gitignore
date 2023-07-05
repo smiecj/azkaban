@@ -54,3 +54,6 @@ target
 .vscode
 test.sh
 test.log
+
+# temp
+OAuthUserManager.java

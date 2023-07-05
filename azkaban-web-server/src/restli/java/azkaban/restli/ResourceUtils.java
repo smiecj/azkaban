@@ -32,10 +32,14 @@ public class ResourceUtils {
   public static boolean hasPermission(final Project project, final User user,
       final Permission.Type type) {
     final UserManager userManager = AzkabanWebServer.getInstance().getUserManager();
-    if (project.hasPermission(user, type)) {
-      return true;
+    switch (project.hasPermission(user, type)) {
+      case Project.PERM_NO:
+        return false;
+      case Project.PERM_HAS:
+        return true;
     }
 
+    // PERM_NO_DEF: will use global permission conf
     for (final String roleName : user.getRoles()) {
       final Role role = userManager.getRole(roleName);
       if (role.getPermission().isPermissionSet(type)

@@ -56,7 +56,21 @@
 
   <div class="az-page-header">
     <div class="container-full">
-      <h1><a href="${context}/schedule">Scheduled Flows</a></h1>
+      <div class="row">
+        <div class="header-title" style="width: 25%;">
+          <h1><a href="${context}/schedule">Scheduled Flows</a></h1>
+        </div>
+        <div class="header-control" style="width: 70%;">
+          <form id="search-form" method="get" class="form-inline header-form" role="form">
+            <div id="schedule-filter" class="form-group" style="float:right">
+              <input type="text" id="searchboxproject" placeholder="Project name contains" class="form-control input-sm" value=#if($search_project) "$esc.html(${search_project})" #else "" #end style="width: 150px;">
+              <input type="text" id="searchboxflow" placeholder="Flow name contains" class="form-control input-sm" value=#if($search_flow) "$esc.html(${search_flow})" #else "" #end style="width: 350px;">
+              <button type="button" class="btn btn-primary btn-sm" id="quick-filter-btn">Search</button>
+              <button type="button" class="btn btn-success btn-sm" id="adv-filter-btn">Advanced Filter</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -166,10 +180,104 @@
             #end
           </tbody>
         </table>
+        <div id="pageAndLimit">
+          <ul class="pagination" id="pageSelection">
+            #if ($advfilter)
+              <li id="previous" class="first"><a
+                  href="${context}/schedule?page=${previous.page}&size=${previous.size}"><span
+                  class="arrow">&larr;</span>Previous</a></li>
+              <li id="page1" #if($page1.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page1.page}&size=${page1.size}&projectExactName=${search_project_exact}&flowExactName=${search_flow_exact}&projectName=${search_project}&flowName=${search_flow}">${page1.page}</a>
+              </li>
+              <li id="page2" #if($page2.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page2.page}&size=${page2.size}&projectExactName=${search_project_exact}&flowExactName=${search_flow_exact}&projectName=${search_project}&flowName=${search_flow}">${page2.page}</a>
+              </li>
+              <li id="page3" #if($page3.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page3.page}&size=${page3.size}&projectExactName=${search_project_exact}&flowExactName=${search_flow_exact}&projectName=${search_project}&flowName=${search_flow}">${page3.page}</a>
+              </li>
+              <li id="page4" #if($page4.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page4.page}&size=${page4.size}&projectExactName=${search_project_exact}&flowExactName=${search_flow_exact}&projectName=${search_project}&flowName=${search_flow}">${page4.page}</a>
+              </li>
+              <li id="page5" #if($page5.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page5.page}&size=${page5.size}&projectExactName=${search_project_exact}&flowExactName=${search_flow_exact}&projectName=${search_project}&flowName=${search_flow}">${page5.page}</a>
+              </li>
+              <li id="next"><a
+                  href="${context}/schedule?page=${next.page}&size=${next.size}&projectExactName=${search_project_exact}&flowExactName=${search_flow_exact}&projectName=${search_project}&flowName=${search_flow}">Next<span
+                  class="arrow">&rarr;</span></a></li>
+            #else
+              <li id="previous" class="first"><a
+                  href="${context}/schedule?page=${previous.page}&size=${previous.size}"><span
+                  class="arrow">&larr;</span>Previous</a></li>
+              <li id="page1" #if($page1.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page1.page}&size=${page1.size}">${page1.page}</a>
+              </li>
+              <li id="page2" #if($page2.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page2.page}&size=${page2.size}">${page2.page}</a>
+              </li>
+              <li id="page3" #if($page3.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page3.page}&size=${page3.size}">${page3.page}</a>
+              </li>
+              <li id="page4" #if($page4.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page4.page}&size=${page4.size}">${page4.page}</a>
+              </li>
+              <li id="page5" #if($page5.selected) class="selected" #end><a
+                  href="${context}/schedule?page=${page5.page}&size=${page5.size}">${page5.page}</a>
+              </li>
+              <li id="next"><a href="${context}/schedule?page=${next.page}&size=${next.size}">Next<span
+                  class="arrow">&rarr;</span></a></li>
+            #end
+          </ul>
+          <div id="page-size-div" style="float:right;display:flex;margin:25px">
+            <p style="width: 80px; margin: 1px">page size:</p>
+            <select id="selector-page-size">
+              <option value="16" #if($search_page_size == '16') selected #end>16</option>
+              <option value="32" #if($search_page_size == '32') selected #end>32</option>
+              <option value="64" #if($search_page_size == '64') selected #end>64</option>
+              <option value="100" #if($search_page_size == '100') selected #end>100</option>
+              <option value="200" #if($search_page_size == '200') selected #end>200</option>
+            </select>
+          </div>
+        </div>
       </div><!-- /col-xs-12 -->
     </div><!-- /row -->
 
   ## Set SLA modal.
+
+    <div class="modal" id="adv-filter">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;
+            </button>
+            <h4 class="modal-title">Advanced Filter</h4>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger" id="adv-filter-error-msg">$error_msg</div>
+            <fieldset class="form-horizontal">
+              <div class="form-group">
+                <label for="projcontain" class="col-sm-2 control-label">Project</label>
+                <div class="col-sm-10">
+                  <input id="projectExactName" type="text" placeholder="Project exact name"
+                         value=#if($search_project_exact) "$esc.html(${search_project_exact})" #else "" #end class="form-control" name="projectExactName">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="flowExactName" class="col-sm-2 control-label">Flow</label>
+                <div class="col-sm-10">
+                  <input id="flowExactName" type="text" placeholder="Flow exact name"
+                         value=#if($search_flow_exact) "$esc.html(${search_flow_exact})" #else "" #end class="form-control" name="flowExactName">
+                </div>
+              </div>
+            </fieldset>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-success" id="filter-btn-exact">Filter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     #parse ("azkaban/webapp/servlet/velocity/slapanel.vm")
 

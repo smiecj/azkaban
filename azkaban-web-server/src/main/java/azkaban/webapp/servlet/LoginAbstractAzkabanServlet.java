@@ -18,6 +18,7 @@ package azkaban.webapp.servlet;
 import static azkaban.ServiceProvider.SERVICE_PROVIDER;
 
 import azkaban.project.Project;
+import azkaban.restli.ResourceUtils;
 import azkaban.server.session.Session;
 import azkaban.user.Permission;
 import azkaban.user.Role;
@@ -365,20 +366,7 @@ public abstract class LoginAbstractAzkabanServlet extends AbstractAzkabanServlet
 
   protected boolean hasPermission(final Project project, final User user,
       final Permission.Type type) {
-    final UserManager userManager = getApplication().getUserManager();
-    if (project.hasPermission(user, type)) {
-      return true;
-    }
-
-    for (final String roleName : user.getRoles()) {
-      final Role role = userManager.getRole(roleName);
-      if (role.getPermission().isPermissionSet(type)
-          || role.getPermission().isPermissionSet(Permission.Type.ADMIN)) {
-        return true;
-      }
-    }
-
-    return false;
+    return ResourceUtils.hasPermission(project, user, type);
   }
 
   /**
@@ -409,7 +397,7 @@ public abstract class LoginAbstractAzkabanServlet extends AbstractAzkabanServlet
       if (ret != null) {
         ret.put("error", "Project 'null' not found.");
       }
-    } else if (!hasPermission(project, user, type)) {
+    } else if (!ResourceUtils.hasPermission(project, user, type)) {
       if (ret != null) {
         ret.put("error",
             "User '" + user.getUserId() + "' doesn't have " + type.name()

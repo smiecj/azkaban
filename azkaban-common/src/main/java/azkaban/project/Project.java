@@ -33,6 +33,11 @@ import java.util.Set;
 
 public class Project {
 
+  // permission (PERM_NO_DEF for public role judge)
+  public static final int PERM_NO_DEF = 1;
+  public static final int PERM_HAS = 2;
+  public static final int PERM_NO = 3;
+
   private final int id;
   private final String name;
   private final LinkedHashMap<String, Permission> userPermissionMap =
@@ -169,14 +174,17 @@ public class Project {
     this.proxyUsers.remove(user);
   }
 
-  public boolean hasPermission(final User user, final Type type) {
+  public int hasPermission(final User user, final Type type) {
+    boolean hasCurrentUserPerm = false;
     final Permission perm = this.userPermissionMap.get(user.getUserId());
-    if (perm != null
-        && (perm.isPermissionSet(Type.ADMIN) || perm.isPermissionSet(type))) {
-      return true;
+    if (perm != null) {
+      hasCurrentUserPerm = true;
+      if (perm.isPermissionSet(Type.ADMIN) || perm.isPermissionSet(type)) {
+        return PERM_HAS;
+      }
     }
 
-    return hasGroupPermission(user, type);
+    return hasCurrentUserPerm ? PERM_NO : hasGroupPermission(user, type);
   }
 
   public boolean hasUserPermission(final User user, final Type type) {
@@ -193,17 +201,20 @@ public class Project {
     return false;
   }
 
-  public boolean hasGroupPermission(final User user, final Type type) {
+  public int hasGroupPermission(final User user, final Type type) {
+    boolean hasCurrentUserGroupPerm = false;
     for (final String group : user.getGroups()) {
       final Permission perm = this.groupPermissionMap.get(group);
       if (perm != null) {
+        hasCurrentUserGroupPerm = true;
         if (perm.isPermissionSet(Type.ADMIN) || perm.isPermissionSet(type)) {
-          return true;
+          return PERM_HAS;
         }
       }
     }
 
-    return false;
+    // detail perm setting has higher priority
+    return hasCurrentUserGroupPerm ? PERM_NO : PERM_NO_DEF;
   }
 
   public List<String> getUsersWithPermission(final Type type) {

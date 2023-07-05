@@ -20,9 +20,7 @@
   <li#if($project_page == 'permissions') class="active"#end><a id="project-permission-btn"
                                                                href="${context}/manager?project=${project.name}&permissions">Permissions</a>
   </li>
-  #if ($admin)
     <li#if($project_page == 'logs') class="active"#end><a id="project-logs-btn"
                                                           href="${context}/manager?project=${project.name}&logs">Project
       Logs</a></li>
-  #end
 </ul>

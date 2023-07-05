@@ -87,7 +87,7 @@ public class HistoryServlet extends LoginAbstractAzkabanServlet {
         newPage(req, resp, session,
             "azkaban/webapp/servlet/velocity/historypage.vm");
     int pageNum = getIntParam(req, "page", 1);
-    final int pageSize = getIntParam(req, "size", getDisplayExecutionPageSize());
+    final int pageSize = Math.min(getIntParam(req, "size", getDisplayExecutionPageSize()), getDisplayExecutionPageMaxSize());
     page.add("vmutils", new VelocityUtil(this.projectManager));
 
     if (pageNum < 0) {

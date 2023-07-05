@@ -58,6 +58,7 @@
   <ul class="nav nav-tabs nav-sm" id="header-tabs">
     <li id="currently-running-view-link"><a href="#currently-running">Currently Running</a></li>
     <li id="recently-finished-view-link"><a href="#recently-finished">Recently Finished</a></li>
+    <li id="smiecj-test-finished-view-link"><a href="#recently-finished">Smiecj 666</a></li>
   </ul>
 
   <div class="row" id="currently-running-view">

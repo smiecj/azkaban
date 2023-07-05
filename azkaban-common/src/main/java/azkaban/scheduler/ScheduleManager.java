@@ -103,6 +103,22 @@ public class ScheduleManager implements TriggerAgent {
   }
 
   /**
+   * Retrieves a copy of the list of schedules by page
+   */
+  public synchronized List<Schedule> getSchedules(final int pageStart, final int pageSize)
+      throws ScheduleManagerException {
+    updateLocal();
+    List<Schedule> allSchedules = new ArrayList<>(this.scheduleIDMap.values());
+
+    // return empty list
+    if (pageStart >= allSchedules.size()) {
+      return new ArrayList<>();
+    }
+    final int endIndex = Math.min(pageStart + pageSize, allSchedules.size());
+    return allSchedules.subList(pageStart, endIndex);
+  }
+
+  /**
    * Returns the scheduled flow for the flow name
    */
   public Schedule getSchedule(final int projectId, final String flowId)
@@ -110,6 +126,37 @@ public class ScheduleManager implements TriggerAgent {
     updateLocal();
     return this.scheduleIdentityPairMap.get(new Pair<>(projectId,
         flowId));
+  }
+
+  /**
+   * Returns the scheduled by project name and flow name with page
+   */
+  public synchronized List<Schedule> getSchedule(String projectExactName, String flowExactName, 
+    String projectName, String flowName, final int pageStart, final int pageSize)
+      throws ScheduleManagerException {
+    updateLocal();
+    List<Schedule> allSchedules = new ArrayList<>(this.scheduleIDMap.values());
+    List<Schedule> retSchedules = new ArrayList<>();
+    // case insensitive
+    projectExactName = projectExactName.toLowerCase();
+    flowExactName = flowExactName.toLowerCase();
+    projectName = projectName.toLowerCase();
+    flowName = flowName.toLowerCase();
+    for (Schedule currentSchedule : allSchedules) {
+      // empty string will always be contained
+      if ( (projectExactName.isEmpty() || currentSchedule.getProjectName().toLowerCase().equals(projectExactName)) && 
+        (flowExactName.isEmpty() || currentSchedule.getFlowName().toLowerCase().contains(flowExactName)) &&
+        (projectName.isEmpty() || currentSchedule.getProjectName().toLowerCase().contains(projectName)) &&
+        (flowName.isEmpty() || currentSchedule.getFlowName().toLowerCase().contains(flowName)) ) {
+        retSchedules.add(currentSchedule);
+      }
+    }
+
+    if (pageStart >= retSchedules.size()) {
+      return new ArrayList<>();
+    }
+    final int endIndex = Math.min(pageStart + pageSize, retSchedules.size());
+    return retSchedules.subList(pageStart, endIndex);
   }
 
   /**
